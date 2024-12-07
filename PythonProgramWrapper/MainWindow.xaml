@@ -154,7 +154,6 @@
                         Content="Run immediately after building" 
                         HorizontalAlignment="Left"
                         Margin="25,5,0,0"
-                        ToolTip="Treat the executable as a release build"
                         VerticalAlignment="Top" 
                         Click="OnRunImdClick"/>
         </StackPanel>
