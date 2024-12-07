@@ -1,0 +1,39 @@
+﻿using System;
+using System.IO;
+using System.Linq;
+using System.Diagnostics;
+using System.Text.RegularExpressions;
+
+namespace Program
+{
+    internal class Program
+    {
+        static void Main(string[] args)
+        {
+            var script = @"<MODULE_PATH>";
+            if (<IS_CONSOLE>) Console.Title = Path.GetFileNameWithoutExtension(script);
+
+            var procInfo = new ProcessStartInfo()
+            {
+                CreateNoWindow = !<IS_CONSOLE>,
+                UseShellExecute = false,
+                FileName = GetPythonPath() ?? GetPythonPath(true),
+                Arguments = script
+            };
+
+            using (var p = Process.Start(procInfo)) p.WaitForExit();
+
+            <DEBUG_AFTER>
+        }
+
+        static string GetPythonPath(bool system = false)
+        {
+            var folder = Environment.GetEnvironmentVariable("Path", system ? EnvironmentVariableTarget.Machine :
+                                                                              EnvironmentVariableTarget.User)
+                                     .Split(';')
+                                     .FirstOrDefault(x => Regex.IsMatch(x, @"^.+\\Python\\Python[0-9]+\\$"));
+
+            return string.IsNullOrEmpty(folder) ? null : folder + "python.exe";
+        }
+    }
+}
