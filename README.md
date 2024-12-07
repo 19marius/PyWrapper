@@ -1,12 +1,14 @@
+<img src="PythonProgramWrapper/python_wrapper.ico" width="120" height="120" align="bottom"/>
+
 ###
-## About the project
+# About the project
 ***PyWrapper*** is a simple program that takes a Python module file (`.py`) and wraps it into a single executable file. 
 
 *Note*:
 This is called a *wrapper* since it doesn't *actually* convert the module into a binary file, it just serves as a way to run it without hassle. Python still does all the work in the background.
 
-
-## Utilities
+###
+# Utilities
 ***PyWrapper*** offers some additional customization options in regards to *how* the module is wrapped.
 
 - <ins>*Building without a console*</ins>:
@@ -32,8 +34,8 @@ You can also add *PyWrapper* as a start-menu shortcut or make it accessible thro
 *Note*:
 These options should only be used for `.py` files. Selecting either for a non `.py` file will have no effect.
 
-
-## API
+###
+# API
 ***PyWrapper*** exposes a simple API through the executable itself. Therefore, to use it, you must reference `pywrapper.exe` in your programs.
 
 The API contains 3 methods contained within the static `Python.Wrapper.Wrapper` class:
