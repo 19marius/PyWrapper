@@ -15,6 +15,7 @@ namespace Program
 
             var procInfo = new ProcessStartInfo()
             {
+                WorkingDirectory = Path.GetDirectoryName(script),
                 CreateNoWindow = !<IS_CONSOLE>,
                 UseShellExecute = false,
                 FileName = GetPythonPath() ?? GetPythonPath(true),
