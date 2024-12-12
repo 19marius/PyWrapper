@@ -16,9 +16,9 @@ This is called a *wrapper* since it doesn't *actually* convert the module into a
 
 	IMPORTANT:
 	To avoid having to close the process manually in *Task Manager* or *cmd*, make sure your module properly handles the lack of a console window.
-- <ins>*Building as  a release*</ins>
+- <ins>*Building as  a release*</ins>:
   Treats the executable as a 'release' by removing the `Press any key to continue . . .` message after program execution. *No effect on non-console builds*.
-- <ins>*Setting an icon*</ins>
+- <ins>*Setting an icon*</ins>:
   You may select an icon for the generated executable to have. This is purely aesthetical, and only applies to the console window and the `.exe` file.
 ##
 You can also add *PyWrapper* as a start-menu shortcut or make it accessible through the context menu. <sub>*(the menu that pops up after you right-click a file)*</sub>
