@@ -118,5 +118,29 @@ namespace Python.Wrapper.Properties {
                 this["Shortcut"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool KillLastProc {
+            get {
+                return ((bool)(this["KillLastProc"]));
+            }
+            set {
+                this["KillLastProc"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string PythonPath {
+            get {
+                return ((string)(this["PythonPath"]));
+            }
+            set {
+                this["PythonPath"] = value;
+            }
+        }
     }
 }

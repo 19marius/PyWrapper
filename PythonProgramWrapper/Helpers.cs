@@ -1,5 +1,6 @@
 ﻿using static Python.Wrapper.PInvoke;
 
+using f = System.Windows.Forms;
 using i = IWshRuntimeLibrary;
 using d = System.Drawing;
 
@@ -43,10 +44,11 @@ namespace Python.Wrapper
         {
             // Set up the .cs and the .csproj files.
 
+            var proj = ReadTextResourceFile("templates/" + (icon == null || icon.Source == null ? "projtemplate.txt" : "projtemplate_icon.txt")).Replace("<DO_NO_CONSOLE>", noConsole ? "WinExe" : "Exe");
             var source = ReadTextResourceFile("templates/pytemplate.txt").Replace("<MODULE_PATH>", module)
                                                            .Replace("<IS_CONSOLE>", (!noConsole).ToString().ToLower())
-                                                           .Replace("<DEBUG_AFTER>", !release && !noConsole ? "Console.WriteLine(\"Press any key to continue . . .\"); Console.ReadKey(true);" : "");
-            var proj = ReadTextResourceFile("templates/" + (icon == null || icon.Source == null ? "projtemplate.txt" : "projtemplate_icon.txt")).Replace("<DO_NO_CONSOLE>", noConsole ? "WinExe" : "Exe");
+                                                           .Replace("<DEBUG_AFTER>", !release && !noConsole ? "Console.WriteLine(\"Press any key to continue . . .\"); Console.ReadKey(true);" : "")
+                                                           .Replace("<PYTHON_PATH>", GetPythonPath() ?? Properties.Settings.Default.PythonPath);
 
             if (bar != null) bar.Value = 20;
 
@@ -54,7 +56,7 @@ namespace Python.Wrapper
 
             DeleteTempFiles();
 
-            var cscpath = App.Location + @"\msbuild";
+            var cscpath = Directory.CreateDirectory(App.Location + @"\temp").FullName;
             File.WriteAllText(cscpath + @"\Program.cs", source);
             File.WriteAllText(cscpath + @"\temp.csproj", proj);
 
@@ -79,12 +81,14 @@ namespace Python.Wrapper
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 RedirectStandardInput = true,
-                FileName = cscpath + @"\MSBuild.exe",
+                FileName = @"C:\Windows\Microsoft.NET\Framework\v4.0.30319\MSBuild.exe",
             };
 
-            // Run "dotnet build (--configuration Release)".
-
-            using (var p = Process.Start(cmdInfo)) p.WaitForExit();
+            using (var p = Process.Start(cmdInfo))
+            {
+                p.StandardOutput.ReadToEnd();
+                p.WaitForExit();
+            }
 
             if (bar != null) bar.Value = 80;
 
@@ -106,12 +110,8 @@ namespace Python.Wrapper
 
         public static void DeleteTempFiles()
         {
-            var cscpath = App.Location + @"\msbuild";
-
-            if (Directory.Exists(cscpath + @"\bin")) Directory.Delete(cscpath + @"\bin", true);
-            if (File.Exists(cscpath + @"\Program.cs")) File.Delete(cscpath + @"Program.cs");
-            if (File.Exists(cscpath + @"\temp.csproj")) File.Delete(cscpath + @"\temp.csproj");
-            if (File.Exists(cscpath + @"\icon.ico")) File.Delete(cscpath + @"\icon.ico");
+            var cscpath = App.Location + @"\temp";
+            if (Directory.Exists(cscpath)) Directory.Delete(cscpath, true);
         }
 
 
@@ -309,14 +309,32 @@ namespace Python.Wrapper
         }
 
 
-        public static string GetPythonPath(bool system = false)
+        public static string GetPythonPath()
         {
-            var folder = Environment.GetEnvironmentVariable("Path", system ? EnvironmentVariableTarget.Machine :
-                                                                              EnvironmentVariableTarget.User)
-                                     .Split(';')
-                                     .FirstOrDefault(x => Regex.IsMatch(x, @"^.+\\Python\\Python[0-9]+\\$"));
+            var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                                          @"Programs\Python");
 
-            return string.IsNullOrEmpty(folder) ? null : folder + "python.exe";
+            if (!Directory.Exists(path)) return null;
+            var folder = Directory.EnumerateDirectories(path).FirstOrDefault(x => Regex.IsMatch(x, @"(?<=^.+\\?)Python[0-9]+"));
+
+            return string.IsNullOrEmpty(folder) ? null : Path.Combine(folder, "python.exe");
+        }
+
+        public static string SelectPythonPath()
+        {
+            var file = new f.OpenFileDialog()
+            {
+                Title = "Select Python executable",
+                Filter = "Python|python.exe",
+                CheckPathExists = true,
+                CheckFileExists = true,
+                Multiselect = false
+            };
+
+            var result = file.ShowDialog();
+            if (result != f.DialogResult.OK) return null;
+
+            return file.FileName;
         }
     }
 

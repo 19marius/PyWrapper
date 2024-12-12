@@ -8,9 +8,13 @@
         x:ClassModifier="internal"
         Title="Python Wrapper"
         ResizeMode="CanMinimize"
-        Height="370" 
+        Height="410" 
         Width="490" 
         Activated="OnWindowFocus">
+    <Window.CommandBindings>
+        <CommandBinding Command="{x:Static local:MainWindow.BuildCmd}"
+                        Executed="OnBuildHotkey"/>
+    </Window.CommandBindings>
     <Grid>
         <TextBlock FontSize="18"
                    HorizontalAlignment="Left"
@@ -134,7 +138,7 @@
                 </Button.Content>
             </Button>
         </Grid>
-        <StackPanel>
+        <StackPanel Margin="0,3,0,0">
             <CheckBox x:Name="noConsoleCheck"
                         Content="Build without console ⓘ" 
                         HorizontalAlignment="Left"
@@ -153,56 +157,74 @@
                         IsChecked="True"
                         Content="Run immediately after building" 
                         HorizontalAlignment="Left"
-                        Margin="25,5,0,0"
+                        Margin="25,15,0,0"
                         VerticalAlignment="Top" 
                         Click="OnRunImdClick"/>
+            <CheckBox x:Name="killCheck"
+                        IsChecked="True"
+                        Content="Kill previous process on build ⓘ" 
+                        HorizontalAlignment="Left"
+                        Margin="25,5,0,0"
+                        ToolTip="If 'Run immediately' was enabled on the last build, the process that was opened then will be terminated"
+                        VerticalAlignment="Top" 
+                        Click="OnKillClick"/>
         </StackPanel>
 
-        <Grid HorizontalAlignment="Right"
-              Margin="0,0,-12,0">
-            <Button x:Name="iconBtn"
-                Content="Set icon"
-                IsEnabled="True"
-                HorizontalAlignment="Right"
-                VerticalAlignment="Top"
-                Width="70"
-                Height="20"
-                Margin="0,185,45,0" 
-                Click="OnSetIconBtnClick">
-                <Button.ContextMenu>
-                    <ContextMenu>
-                        <MenuItem Header="Clear"
+        <Grid Margin="0,75,0,0">
+            <StackPanel Orientation="Horizontal"
+                        HorizontalAlignment="Right"
+                        Margin="0,63,32,0">
+                <Grid>
+                    <Rectangle Stroke="#FF000000" 
+                           StrokeThickness="0.5" 
+                           StrokeDashArray="4 4"
+                           Fill="Transparent"
+                           Height="27"
+                           Width="27" 
+                           Margin="0,0,0,0" 
+                           SnapsToDevicePixels="True"/>
+                    <Image x:Name="iconImg"
+                       Margin="5.1,5,0,0"
+                       Height="26"
+                       Width="26">
+                        <Image.RenderTransform>
+                            <ScaleTransform ScaleX="0.8"
+                               ScaleY="0.8"
+                               CenterX=".5"
+                               CenterY=".5"/>
+                        </Image.RenderTransform>
+                    </Image>
+                </Grid>
+                <Button x:Name="iconBtn"
+                    Content="Set icon"
+                    IsEnabled="True"
+                    Width="70"
+                    Height="20"
+                    Margin="10,7,0,0" 
+                    Click="OnSetIconBtnClick">
+                    <Button.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem Header="Clear"
                                   Click="OnClearIcon"
                                   CommandParameter="{Binding RelativeSource={RelativeSource Self}, Path=Parent}"/>
-                    </ContextMenu>
-                </Button.ContextMenu>
+                        </ContextMenu>
+                    </Button.ContextMenu>
+                </Button>
+            </StackPanel>
+            <Button x:Name="pythonPathBtn"
+                    Content="Change Python location"
+                    IsEnabled="True"
+                    Width="150"
+                    Height="20"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Bottom"
+                    Margin="0,0,-13,15"
+                    Click="OnPythonPathClick">
+                <Button.RenderTransform>
+                    <ScaleTransform ScaleX="0.7"
+                                    ScaleY="0.7"/>
+                </Button.RenderTransform>
             </Button>
-            <Rectangle Stroke="#FF000000" 
-                   StrokeThickness="0.5" 
-                   StrokeDashArray="4 4"
-                   Fill="Transparent"
-                   HorizontalAlignment="Right"
-                   VerticalAlignment="Center"
-                   Height="27"
-                   Width="27" 
-                   Margin="0,50,125.5,0" 
-                   SnapsToDevicePixels="True"/>
-            <Image x:Name="iconImg"
-                HorizontalAlignment="Right" 
-                VerticalAlignment="Center"
-                Height="26" 
-                Margin="0,55,123.5,0"
-                Width="26">
-                <Image.RenderTransform>
-                    <ScaleTransform ScaleX="0.8"
-                                ScaleY="0.8"
-                                CenterX=".5"
-                                CenterY=".5"/>
-                </Image.RenderTransform>
-            </Image>
-        </Grid>
-
-        <Grid Margin="0,40,0,0">
             <TextBlock x:Name="statusText"
                        Text="Waiting..."
                        FontSize="14"
@@ -225,7 +247,7 @@
                         Margin="25,180,0,0" 
                         Click="OnBuildBtnClick"/>
                 <Rectangle Stroke="#FF000000" 
-                   StrokeThickness="0.5" 
+                   StrokeThickness="1" 
                    StrokeDashArray="4 4"
                    Fill="Transparent"
                    HorizontalAlignment="Left"
@@ -234,7 +256,8 @@
                    Width="420" 
                    Margin="25,15,0,0" 
                    SnapsToDevicePixels="True"/>
-                <StackPanel Margin="5,0,0,0">
+                <StackPanel Margin="5,5,0,0"
+                            Opacity="0.7">
                     <CheckBox x:Name="contextCheck"
                           Content="Add PyWrapper to the context menu" 
                           HorizontalAlignment="Left"
@@ -262,6 +285,6 @@
                          VerticalAlignment="Top" 
                          Width="364"/>
         </Grid>
-
     </Grid>
+    
 </Window>

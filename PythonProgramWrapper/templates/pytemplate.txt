@@ -1,8 +1,6 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
 using System.Diagnostics;
-using System.Text.RegularExpressions;
 
 namespace Program
 {
@@ -18,23 +16,13 @@ namespace Program
                 WorkingDirectory = Path.GetDirectoryName(script),
                 CreateNoWindow = !<IS_CONSOLE>,
                 UseShellExecute = false,
-                FileName = GetPythonPath() ?? GetPythonPath(true),
+                FileName = @"<PYTHON_PATH>",
                 Arguments = script
             };
 
             using (var p = Process.Start(procInfo)) p.WaitForExit();
 
             <DEBUG_AFTER>
-        }
-
-        static string GetPythonPath(bool system = false)
-        {
-            var folder = Environment.GetEnvironmentVariable("Path", system ? EnvironmentVariableTarget.Machine :
-                                                                              EnvironmentVariableTarget.User)
-                                     .Split(';')
-                                     .FirstOrDefault(x => Regex.IsMatch(x, @"^.+\\Python\\Python[0-9]+\\$"));
-
-            return string.IsNullOrEmpty(folder) ? null : folder + "python.exe";
         }
     }
 }

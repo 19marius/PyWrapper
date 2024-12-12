@@ -2,6 +2,8 @@
 
 using System.Text.RegularExpressions;
 using System.Windows.Media.Imaging;
+using System.Windows.Controls;
+using System.Windows.Input;
 using System.Diagnostics;
 using System.Windows;
 using System.IO;
@@ -14,6 +16,9 @@ namespace Python.Wrapper
     /// </summary>
     internal partial class MainWindow : Window
     {
+        public static RoutedCommand BuildCmd = new RoutedCommand();
+
+        Process lastProc;
         BitmapSource defIcon;
         internal static string initPath = null;
 
@@ -39,6 +44,11 @@ namespace Python.Wrapper
                 Properties.Settings.Default.Save();
             }
 
+            // If the default installation of Python is found, disable the ability to change it.
+
+            ToolTipService.SetShowOnDisabled(pythonPathBtn, true);
+            if (Helpers.GetPythonPath() != null) TogglePythonPathBtn(false);
+
             // Set all the text fields and check boxes.
 
             modulePathBox.Text = Properties.Settings.Default.LastModulePath;
@@ -47,7 +57,25 @@ namespace Python.Wrapper
             releaseCheck.IsChecked = Properties.Settings.Default.Release;
             contextCheck.IsChecked = Properties.Settings.Default.Context;
             shortcutCheck.IsChecked = Properties.Settings.Default.Shortcut;
+            killCheck.IsChecked = Properties.Settings.Default.KillLastProc;
             runCheck.IsChecked = Properties.Settings.Default.RunImd;
+
+            // Additional kill button checks
+
+            if (!runCheck.IsChecked ?? false)
+            {
+                killCheck.Opacity = 1;
+                killCheck.IsEnabled = true;
+            }
+            else
+            {
+                killCheck.Opacity = 0.5;
+                killCheck.IsChecked = true;
+                killCheck.IsEnabled = false;
+
+                Properties.Settings.Default.KillLastProc = true;
+                Properties.Settings.Default.Save();
+            }
 
             // If the context menu entry already exists but control isn't checked, reset the context and check the control.
 
@@ -67,7 +95,7 @@ namespace Python.Wrapper
                 Properties.Settings.Default.Shortcut = false;
                 Properties.Settings.Default.Save();
             }
-            
+
             if ((!shortcutCheck.IsChecked ?? false) && Helpers.ShortcutExists())
             {
                 Helpers.RemoveShortcut();
@@ -77,6 +105,10 @@ namespace Python.Wrapper
                 Properties.Settings.Default.Shortcut = true;
                 Properties.Settings.Default.Save();
             }
+
+            // Add hotkeys
+
+            BuildCmd.InputGestures.Add(new KeyGesture(Key.F5));
 
             // Standard build/utility button checks.
 
@@ -100,12 +132,31 @@ namespace Python.Wrapper
             buildBtn.IsEnabled = !unready;
         }
 
+        private void TogglePythonPathBtn(bool value)
+        {
+            pythonPathBtn.ToolTip = value ? "The executable uses the Python program found at this path.\nIf it is modified or removed, the executable won't run anymore, and you'll need to reselect Python's location" :
+                                            "The default Python installation was found";
+
+            pythonPathBtn.IsEnabled = value;
+        }
+
 
         private void OnWindowFocus(object sender, EventArgs e)
         {
             modulePathBox.Text = File.Exists(modulePathBox.Text) ? modulePathBox.Text : "...";
             outputFolderBox.Text = Directory.Exists(outputFolderBox.Text) ? outputFolderBox.Text : "...";
             CheckBuildValidity();
+
+            if (!pythonPathBtn.IsEnabled && Helpers.GetPythonPath() == null)
+            {
+                MessageBox.Show("The default installation of Python could no longer be found.\nSwitching to the manual installation.",
+                                "PyWrapper",
+                                MessageBoxButton.OK,
+                                MessageBoxImage.Warning);
+
+                TogglePythonPathBtn(true);
+            }
+            else if (Helpers.GetPythonPath() != null) TogglePythonPathBtn(false);
         }
 
 
@@ -128,7 +179,15 @@ namespace Python.Wrapper
                 Properties.Settings.Default.Save();
             }
 
-            // Build the executable
+            // Optionally kill the last process.
+
+            if ((killCheck.IsChecked ?? false) && (!lastProc?.HasExited ?? false))
+            {
+                lastProc?.Kill();
+                lastProc = null;
+            }
+
+            // Build the executable.
 
             Helpers.BuildPythonExe(progressBar,
                                    iconImg.Source == null || iconImg.Source == defIcon ? null : iconImg,
@@ -140,13 +199,12 @@ namespace Python.Wrapper
             // Optionally run the executable after it was built.
 
             var out_path = Path.Combine(outputFolderBox.Text, Path.GetFileNameWithoutExtension(modulePathBox.Text) + ".exe");
-
             if (runCheck.IsChecked ?? false)
             {
                 var startInfo = new ProcessStartInfo(out_path);
                 
                 startInfo.UseShellExecute = true;
-                Process.Start(startInfo);
+                lastProc = Process.Start(startInfo);
             }
 
             // Reset the status controls (except the progress bar).
@@ -274,7 +332,29 @@ namespace Python.Wrapper
         {
             Properties.Settings.Default.RunImd = runCheck.IsChecked ?? false;
             Properties.Settings.Default.Save();
+
+            if (!runCheck.IsChecked ?? false)
+            {
+                killCheck.Opacity = 1;
+                killCheck.IsEnabled = true;
+            }
+            else
+            {
+                killCheck.Opacity = 0.5;
+                killCheck.IsChecked = true;
+                killCheck.IsEnabled = false;
+
+                Properties.Settings.Default.KillLastProc = true;
+                Properties.Settings.Default.Save();
+            }
         }
+
+        private void OnKillClick(object sender, RoutedEventArgs e)
+        {
+            Properties.Settings.Default.KillLastProc = killCheck.IsChecked ?? false;
+            Properties.Settings.Default.Save();
+        }
+
 
         private void OnContextClick(object sender, RoutedEventArgs e)
         {
@@ -292,6 +372,23 @@ namespace Python.Wrapper
 
             if (shortcutCheck.IsChecked ?? false) Helpers.AddShortcut();
             else Helpers.RemoveShortcut();
+        }
+
+        private void OnPythonPathClick(object sender, RoutedEventArgs e)
+        {
+            var path = Helpers.SelectPythonPath();
+            if (path == null) return;
+
+            Properties.Settings.Default.PythonPath = path;
+            Properties.Settings.Default.Save();
+        }
+
+
+        private void OnBuildHotkey(object sender, RoutedEventArgs e)
+        {
+            if (!buildBtn.IsEnabled) return;
+
+            OnBuildBtnClick(null, null);
         }
     }
 }
